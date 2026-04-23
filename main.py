@@ -1,13 +1,17 @@
 from link import clink
-arr=[0,0,0]
+arr=[0,0,0,0]
 a=clink(arr)
-arr=[1,66.4,0]
+arr=[1,6,7,8]
 a=clink(arr)
-arr=[2,0,0]
+arr=[2,0,0,0]
 a=clink(arr)
-print(a)
-arr=[1,6.4,0]
+print(a[0])
+print(a[1])
+print(a[2])
+arr=[1,2,3,9]
 a=clink(arr)
-arr=[2,0,0]
+arr=[2,0,0,0]
 a=clink(arr)
-print(a)
+print(a[0])
+print(a[1])
+print(a[2])

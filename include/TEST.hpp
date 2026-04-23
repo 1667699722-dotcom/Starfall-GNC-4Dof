@@ -1,15 +1,15 @@
 
 #ifndef TESTHPP
 #define TESTHPP
-
+#include <vector>
 
 class Test{
 public:
    Test();
-   void setvalue(float* v);
+   void setvalue(const float*);
    float* getvalue();
 private:
-   float* value;
+   std::vector<float> value;
 };
 
 #endif
