@@ -10,6 +10,7 @@ public:
    float* getvalue();
 private:
    std::vector<float> value;
+   std::vector<float> data;
 };
 
 #endif

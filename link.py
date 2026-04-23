@@ -1,7 +1,7 @@
 import ctypes
 import numpy as np
 import gc
-lib = ctypes.CDLL("./link.dylib")
+lib = ctypes.CDLL("./bin/link.dylib")
 
 lib.link.argtypes = [
     ctypes.c_int,

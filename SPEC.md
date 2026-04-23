@@ -1,6 +1,6 @@
 # Starfall-GNC-4Dof — 项目规格书
 
-> 版本：v0.1  |  创建：2026-04-22  |  状态：规划中
+> 版本：v0.2  |  创建：2026-04-22  |  更新：2026-04-23  |  状态：**Phase 1 进行中**
 
 ---
 
@@ -8,7 +8,17 @@
 
 **目标**：4-DOF 平面火箭 GNC 仿真引擎
 **定位**：之前星舰项目的简化平替，聚焦 GNC 核心逻辑
-**架构**：C++ 核心 + Python 渲染（ctypes），无外部物理引擎依赖
+**架构**：C++ 核心 + Python 渲染（ctypes）+ Mathematica 重算层
+
+### 各层职责
+
+| 层级 | 组件 | 职责 |
+|------|------|------|
+| **总控（Python）** | main.py / Pygame | ctypes 通信、Pygame 动画、指令调度、GUI |
+| **核心引擎（C++）** | link.cpp / test.cpp | 动力学积分、控制算法、空气阻力、指令解析 |
+| **重算引擎（Mathematica）** | .nb /.m | ODE 解析求解、复杂轨迹优化、凸优化规划 |
+
+> Python 作为总控协调各方；Mathematica 处理复杂解析/优化任务（而非实时仿真）
 
 ---
 
@@ -184,40 +194,57 @@ void sf_set_thrust_range(double T_min, double T_max);
 void sf_set_mass(double m_dry, double m_fuel0, double I_sp);
 ```
 
-### 5.3 Python 渲染层职责
+### 5.3 Python 总控层职责
 
-- 读取 `Telemetry` 结构，实时渲染
-- 发送 `sf_send_command()` 控制指令
-- 使用 **Pygame** 绘制：火箭姿态、轨迹曲线、高度/速度仪表盘
+- Pygame 渲染：火箭姿态、轨迹曲线、仪表盘
+- 指令调度：向 C++ 内核发送 THR/GIM/ATG 等指令
+- 协调 Mathematica：复杂轨迹优化结果回传至 C++ 内核
+- 仿真主循环：帧节奏控制（60fps）
+
+### 5.4 Mathematica 重算层职责
+
+- ODE 解析求解（解析积分 vs 数值积分的对比验证）
+- 复杂轨迹优化（凸优化/QP，在线规划前离线验证）
+- 气动系数查表生成（风洞数据拟合）
+- 控制参数整定（LQR/PID 参数搜索）
+
+> **设计原则**：Mathematica 不参与实时仿真循环，仅在设计阶段或关键决策点被调用，结果以查表或指令形式注入 C++ 内核。
 
 ---
 
-## 六、项目结构
+## 六、项目结构（Phase 1 进行中）
 
 ```
 Starfall-GNC-4Dof/
-├── CMakeLists.txt
+├── link.cpp              ← C++ ctypes 导出入口（已实现）
+├── link.py               ← Python ctypes 封装（已实现）
+├── main.py               ← Pygame 主循环 + 动画（已实现）
+├── run.sh                ← 编译脚本（clang++ + Metal）
 ├── include/
-│   ├── starfall.h          # 公共头文件
-│   ├── dynamics.h          # 动力学模型
-│   ├── guidance.h          # 导引算法
-│   ├── navigation.h        # 导航/滤波
-│   ├── control.h           # 控制器
-│   └── command.h           # 指令集解析
+│   ├── TEST.hpp          ← 临时测试类（Phase 1 演示用）
+│   ├── starfall.h        # 规划中
+│   ├── dynamics.h        # 规划中
+│   ├── guidance.h        # 规划中
+│   ├── navigation.h      # 规划中
+│   ├── control.h         # 规划中
+│   └── command.h          # 规划中
 ├── src/
-│   ├── starfall.cpp        # 主入口，ctypes 导出
-│   ├── dynamics.cpp        # ODE 求解（RK4）
-│   ├── guidance.cpp        # 导引逻辑
-│   ├── navigation.cpp      # EKF
-│   ├── control.cpp         # 串级 PID/LQR
-│   └── command.cpp         # 指令解析器
+│   ├── test.cpp          ← 动力学积分演示（Phase 1 演示用）
+│   ├── starfall.cpp      # 规划中（替换 link.cpp）
+│   ├── dynamics.cpp      # 规划中
+│   ├── guidance.cpp      # 规划中
+│   ├── navigation.cpp    # 规划中
+│   ├── control.cpp       # 规划中
+│   └── command.cpp       # 规划中
 ├── python/
-│   ├── sim.py              # ctypes 封装，仿真主循环
-│   ├── renderer.py         # Pygame 渲染器
-│   ├── instruments.py      # 仪表盘 UI
-│   └── config.json         # 仿真参数配置
+│   ├── renderer.py       # 规划中
+│   ├── instruments.py    # 规划中
+│   └── config.json       # 规划中
+├── bin/                  ← 编译输出
 └── SPEC.md
 ```
+
+> 注：Phase 1 演示用 link.cpp/test.cpp 为快速验证版本；正式架构将整合为 starfall.cpp + 各模块头文件。
 
 ---
 
@@ -226,10 +253,16 @@ Starfall-GNC-4Dof/
 - ✅ 可变推力 + 发动机摆角（推力方向可控）
 - ✅ 燃料消耗导致质量时变（齐奥尔科夫斯基质量模型）
 - ✅ 阻力建模为函数（高度指数密度 + 速度平方阻力）
-- ✅ Python Pygame 渲染
+- ✅ Python Pygame 渲染（总控层）
 - ✅ 自主设计指令集（状态机 + 队列）
-- ❌ 我只记录，不写代码
+- ✅ C++ 内核与 Python ctypes 通信（Phase 1 完成）
+- ✅ Pygame 动画效果（main.py，60fps）
+- ✅ 初步指令集（case 0/1/2 演示：初始化/设置/积分）
+- ⏳ 动力学模型（ODE 求解、C++ 实现）
+- ⏳ 串级控制（姿态环 + 轨迹环）
+- ⏳ 空气动力学模型（ρ(z)、阻力函数）
+- ⏳ Mathematica 重算层（ODE 解析求解、凸优化轨迹规划）
 
 ---
 
-*状态：规划中，等待启动*
+*状态：Phase 1 进行中（已完成 C++/Python 通信 + 动画）*
