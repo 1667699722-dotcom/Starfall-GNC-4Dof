@@ -40,5 +40,3 @@ Notebook[{
 ]
 *)
 
-(* End of internal cache information *)
-

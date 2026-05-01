@@ -13,7 +13,7 @@ block_h = 16
 x = W // 2 - block_w // 2
 y = H/4
 speed = 3
-
+# 初始化
 arr=[0,0,0,0]
 a=clink(arr)
 arr=[1,0,0.1,10]
@@ -46,3 +46,5 @@ while True:
     pygame.display.update()
     
     clock.tick(60)
+# 游戏结束
+# 游戏结束时，显示游戏结束界面
